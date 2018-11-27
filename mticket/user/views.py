@@ -278,11 +278,12 @@ def homeuser(request):
                 user.noti_chat = 0
                 user.save()
             else:
+                print(request.POST)
                 form = CreateNewTicketForm(request.POST, request.FILES)
                 if form.is_valid():
                     ticket = Tickets()
-                    ticket.client = form.cleaned_data['client']
-                    ticket.info_client = form.cleaned_data['info_client']
+                    # ticket.client = form.cleaned_data['client']
+                    # ticket.info_client = form.cleaned_data['info_client']
                     ticket.loai_su_co = form.cleaned_data['loai_su_co']
                     ticket.thong_so_kt = form.cleaned_data['thong_so_kt']
                     service = Services.objects.get(name=request.POST['service'])
@@ -298,14 +299,9 @@ def homeuser(request):
                             handle_uploaded_file(request.FILES['attach'])
                         else:
                             return render(request, 'user/home_user.html', content)
-                    if request.POST['kind'] == 'tu_xu_ly':
-                        ticket.status = 1
-                        ticket.save()
-                        TicketAgent.objects.create(agentid=user, ticketid=ticket)
-                        action = 'tạo mới và tự xử lý yêu cầu'
-                    else:
-                        ticket.save()
-                        action = 'tạo mới yêu cầu'
+                    
+                    ticket.save()
+                    action = 'tạo mới yêu cầu'
                     TicketLog.objects.create(agentid=user,
                                              ticketid=ticket,
                                              action=action,
@@ -317,123 +313,6 @@ def homeuser(request):
         return redirect("/")
 
 
-# def another_user(request, username):
-#     if request.session.has_key('user') and (Agents.objects.get(username=request.session['user'])).status == 1:
-#         try:
-#             user = Agents.objects.get(username=username)
-#         except ObjectDoesNotExist:
-#             return redirect("/")
-#         user_this = Agents.objects.get(username=request.session['user'])
-#         # admin = Agents.objects.get(admin=1)
-#         form = CreateNewTicketForm()
-#         group = GroupServices.objects.all()
-#         ls_group = {}
-#         for gr in group:
-#             ls_group[gr.name] = Services.objects.filter(groupserviceid=gr)
-#         service = Services.objects.all()
-#         ticket = Tickets.objects.filter(sender=user.id).order_by('-id')
-#         handler = TicketAgent.objects.all()
-#         ls_user = Agents.objects.exclude(Q(username=request.session['user'])|Q(position__in=[1,2,3,4]))
-#         content = {'ticket': ticket,
-#                    'form': form,
-#                    'user': user_this,
-#                    'group': ls_group,
-#                    'handler': handler,
-#                    'service': service,
-#                    'username': mark_safe(json.dumps(user_this.username)),
-#                    'fullname': mark_safe(json.dumps(user_this.fullname)),
-#                    # 'admin': mark_safe(json.dumps(admin.username)),
-#                    'noti_noti': user_this.noti_noti,
-#                    'noti_chat': user_this.noti_chat,
-#                    'ls_user': ls_user,
-#                    'fname': mark_safe(json.dumps(user.fullname)),
-#                    'uname': mark_safe(json.dumps(user.username)),
-#                    }
-#         if request.method == 'POST':
-#             if 'tkid' in request.POST:
-#                 ticket = Tickets.objects.get(id=request.POST['tkid'])
-#                 ticket.status = 3
-#                 ticket.date_close = timezone.now()
-#                 ticket.save()
-#                 TicketLog.objects.create(agentid=user_this,
-#                                          ticketid=ticket,
-#                                          action='đóng yêu cầu',
-#                                          date=timezone.now().date(),
-#                                          time=timezone.now().time())
-#                 CommentsLog.objects.create(date=timezone.now(),
-#                                            ticketid=ticket,
-#                                            agentid=user_this,
-#                                            action=request.POST['comment'])
-#                 try:
-#                     tkag = TicketAgent.objects.filter(ticketid=request.POST['tkid']).values('agentid')
-#                 except ObjectDoesNotExist:
-#                     pass
-#                 else:
-#                     receiver = Agents.objects.filter(id__in=tkag)
-#                     for rc in receiver:
-#                         if rc.receive_email == 1:
-#                             email = EmailMessage('Đóng yêu cầu',
-#                                                  render_to_string('user/close_email.html',
-#                                                                   {'receiver': rc, 'sender': user, 'id': id}),
-#                                                  to=[rc.email], )
-#                             thread = EmailThread(email)
-#                             thread.start()
-#             elif 'tkid_send' in request.POST:
-#                 ticket = Tickets.objects.get(id=request.POST['tkid_send'])
-#                 ticket.status = 0
-#                 ticket.save()
-#                 TicketLog.objects.create(agentid=user_this,
-#                                          ticketid=ticket,
-#                                          action='gửi yêu cầu',
-#                                          date=timezone.now().date(),
-#                                          time=timezone.now().time())
-#                 tkag = TicketAgent.objects.get(ticketid=ticket, agentid=user)
-#                 tkag.delete()
-#             elif 'tkid_modify' in request.POST:
-#                 ticket = Tickets.objects.get(id=request.POST['tkid_modify'])
-#                 ticket.loai_su_co = request.POST['loai_su_co']
-#                 ticket.content = request.POST['content']
-#                 ticket.thong_so_kt = request.POST['thong_so_kt']
-#                 ticket.client = request.POST['client']
-#                 ticket.info_client = request.POST['info_client']
-#                 ticket.save()
-#                 TicketLog.objects.create(agentid=user_this,
-#                                          ticketid=ticket,
-#                                          action='chỉnh sửa yêu cầu',
-#                                          date=timezone.now().date(),
-#                                          time=timezone.now().time())
-#             elif 'tkid_reprocess' in request.POST:
-#                 ticket = Tickets.objects.get(id=request.POST['tkid_reprocess'])
-#                 ticket.status = 1
-
-#                 ticket.note = request.POST['comment']
-#                 ticket.save()
-#                 TicketLog.objects.create(agentid=user_this,
-#                                          ticketid=ticket,
-#                                          action='xử lý lại yêu cầu',
-#                                          date=timezone.now().date(),
-#                                          time=timezone.now().time())
-#                 CommentsLog.objects.create(date=timezone.now(),
-#                                            ticketid=ticket,
-#                                            agentid=user_this,
-#                                            action=request.POST['comment'])
-#             elif 'tkid_comment' in request.POST:
-#                 ticket = Tickets.objects.get(id=request.POST['tkid_comment'])
-#                 CommentsLog.objects.create(date=timezone.now(),
-#                                            ticketid=ticket,
-#                                            agentid=user_this,
-#                                            action=request.POST['comment'])
-#             elif 'noti_noti' in request.POST:
-#                 user_this.noti_noti = 0
-#                 user_this.save()
-#             elif 'noti_chat' in request.POST:
-#                 user_this.noti_chat = 0
-#                 user_this.save()
-#         return render(request, 'user/another_user.html', content)
-#     else:
-#         return redirect("/")
-
-
 def handle_uploaded_file(f):
     # path = settings.MEDIA_ROOT+"/photos/"+f.name
     path = "media/photos/" + f.name
@@ -441,60 +320,6 @@ def handle_uploaded_file(f):
     for chunk in f.chunks():
         file.write(chunk)
     file.close()
-
-
-# def homeuser_data_tu_xu_ly(request, username):
-#     if request.session.has_key('user') and (Agents.objects.get(username=request.session['user'])).status == 1:
-#         user = Agents.objects.get(username=username)
-#         tks = Tickets.objects.filter(sender=user.id, status=1).order_by('-id')
-#         tks_txl = TicketAgent.objects.filter(ticketid__in=tks, agentid=user)
-#         data = []
-#         for tk in tks_txl:
-#             client = r'<a id="client_' + str(tk.ticketid.id) + '" data-toggle="collapse" data-target="#client'+ str(tk.ticketid.id)+'">' + tk.ticketid.client + '   <i class="fa fa-sort-desc"></i></a><br><div id="client' + str(tk.ticketid.id)+'" class="collapse">' + tk.ticketid.info_client+'</div>'
-#             loai_su_co_data = str(tk.ticketid.loai_su_co).split(' ')
-#             if len(loai_su_co_data) < 5:
-#                 loai_su_co = r'<div id="loai' + str(tk.ticketid.id) + '"><p>' + tk.ticketid.loai_su_co + '</p></div>'
-#             else:
-#                 loai_su_co_data_5 = ''
-#                 for s in loai_su_co_data[:4]:
-#                     loai_su_co_data_5 += s + " "
-#                 loai_su_co = r'<a data-toggle="collapse" data-target="#loai' + str(tk.ticketid.id) + '"><p>' + loai_su_co_data_5 + '...</p></a><div id="loai' + str(tk.ticketid.id) + '" class="collapse"><p>' + tk.ticketid.loai_su_co + '<p></div>'
-#             content_data = str(tk.ticketid.content).split(' ')
-#             if len(content_data) < 5:
-#                 content = r'<div id="content' + str(tk.ticketid.id)+'"><p>' + tk.ticketid.content + '</p></div>'
-#             else:
-#                 content_data_5 = ''
-#                 for s in content_data[:4]:
-#                     content_data_5 += s + " "
-#                 content = r'<a data-toggle="collapse" data-target="#content'+ str(tk.ticketid.id)+'"><p>' + content_data_5 + '...</p></a><div id="content' + str(tk.ticketid.id)+'" class="collapse"><p>' + tk.ticketid.content+'<p></div>'
-#             thong_so_kt_data = str(tk.ticketid.thong_so_kt).split(' ')
-#             if len(thong_so_kt_data) < 5:
-#                 thong_so_kt = r'<div id="thong_so' + str(tk.ticketid.id) + '"><p>' + tk.ticketid.thong_so_kt + '</p></div>'
-#             else:
-#                 thong_so_kt_data_5 = ''
-#                 for s in thong_so_kt_data[:4]:
-#                     thong_so_kt_data_5 += s + " "
-#                 thong_so_kt = r'<a data-toggle="collapse" data-target="#thong_so' + str(
-#                     tk.ticketid.id) + '"><p>' + thong_so_kt_data_5 + '...</p></a><div id="thong_so' + str(tk.ticketid.id) + '" class="collapse"><p>' + tk.ticketid.thong_so_kt + '<p></div>'
-#             if tk.ticketid.attach != '':
-#                 attach = r'<a class="fa fa-image" data-title="' + str(tk.ticketid.attach) + '" data-toggle="modal" data-target="#image" id="' + str(tk.ticketid.id)+'"></a>'
-#             else:
-#                 attach = ''
-#             note = r'<a data-toggle="modal" data-target="#all_note" data-title="new" id="' + str(tk.ticketid.id)+'"><i class="fa fa-pencil-square-o"></i></a>'
-#             option = '''<div class="btn-group"><button type="button" class="btn btn-danger close_ticket_txl" data-toggle="modal" data-target="#all_note" data-title="close_txl" id="''' + str(tk.ticketid.id) + '''" ><span class="glyphicon glyphicon-off"></span></button>'''
-#             option += '''<button type="button" class="btn btn-primary send_ticket" data-toggle="tooltip" title="gửi" id="''' + tk.ticketid.serviceid.name + '''!'''+  str(tk.ticketid.id) + '''" ><span class="glyphicon glyphicon-send"></span></button>'''
-#             option += '''<button type="button" class="btn btn-success modify_ticket" data-toggle="tooltip" title="chỉnh sửa" id="'''+  str(tk.ticketid.id) + '''" ><i class="fa fa-wrench"></i></button>'''
-#             option += '''<a type="button" target=_blank class="btn btn-warning" href="/user/history_'''+str(tk.ticketid.id)+ '''" data-toggle="tooltip" title="dòng thời gian"><i class="fa fa-history"></i></a></div>'''
-#             datestart = tk.ticketid.datestart + timezone.timedelta(hours=7)
-#             dateend = r'<p id="dateend' + str(tk.ticketid.id) + '">'+ str(tk.ticketid.dateend + timezone.timedelta(hours=7))[:-16] +'</p>'
-#             downtime = '''<p class="downtime" id="downtime-''' + str(tk.ticketid.id) + '''"></p>'''
-#             status = r'<span class ="label label-warning" id="stt' + str(tk.ticketid.id) + '">Đang xử lý</span>'
-#             service = '''<p id="service''' + str(tk.ticketid.id) + '''">'''+str(tk.ticketid.serviceid.name)+'''</p>'''
-#             data.append([tk.ticketid.id, client, service, loai_su_co, content,
-#                          thong_so_kt, note, attach, str(datestart)[:-16], dateend, downtime, status, option])
-#         ticket = {"data": data}
-#         tickets = json.loads(json.dumps(ticket))
-#         return JsonResponse(tickets, safe=False)
 
 
 def homeuser_data_gui_di(request, username):
@@ -749,7 +574,9 @@ def comment_data(request, id):
         if id == '0':
             pass
         elif id == 'all':
-            cm_log = CommentsLog.objects.all()
+            ls_tk = Tickets.objects.filter(sender=Agents.objects.get(username=request.session['user']))
+            cm_log = CommentsLog.objects.filter(ticketid__in=ls_tk)
+            # cm_log = CommentsLog.objects.all()
             for cm in cm_log:
                 agent = cm.agentid.fullname + '<br>' + cm.agentid.phone
                 data.append(
@@ -778,3 +605,23 @@ def comment_log(request):
                                                            'ls_user': ls_user})
     else:
         return redirect("/")
+
+
+def resetpwd(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = Agents.objects.get(id=uid)
+    except(TypeError, ValueError, OverflowError, Agents.DoesNotExist):
+        user = None
+    if user is not None and account_activation_token.check_token(user, token):
+        if request.method == 'POST':
+            form = ResetForm(request.POST)
+            if form.is_valid():
+                user.password = form.cleaned_data
+                user.save()
+                return redirect('/')
+            else:
+                return redirect('/')
+        return render(request, 'user/formresetpass.html', {})
+    else:
+        return HttpResponse('Activation link is invalid!')
