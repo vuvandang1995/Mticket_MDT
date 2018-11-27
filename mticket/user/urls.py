@@ -8,6 +8,8 @@ urlpatterns = [
     path('', views.login_user, name='login'),
     path(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         views.activate, name='activate'),
+    path(r'^resetpassword/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        views.resetpwd, name='resetpassword'),
     path('user/', views.homeuser, name='homeuser'),
     # path('user/tu_xu_ly_<str:username>', views.homeuser_data_tu_xu_ly, name='homeuser_data_tu_xu_ly'),
     path('user/gui_di_<str:username>', views.homeuser_data_gui_di, name='homeuser_data_gui_di'),
